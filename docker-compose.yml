@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+  app:
+    build:
+      args:
+        user: jobsUer
+        uid: 1000
+      context: ./
+      dockerfile: Dockerfile
+    image: jobs-management
+    container_name: jobs-management-app
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+    networks:
+      - jobs
+  
+  db:
+    image: mysql:latest
+    container_name: jobs-management-db
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+    volumes:
+      - ./docker/mysql:/docker-entrypoint-initdb.d
+      - ./docker/mysql/mysql-data:/var/lib/mysql
+    networks:
+      - jobs
+  
+  nginx:
+    image: nginx:alpine
+    container_name: jobs-management-nginx
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./:/var/www
+      - ./docker/nginx:/etc/nginx/conf.d/
+    networks:
+      - jobs
+
+networks:
+  jobs:
+    driver: bridge
